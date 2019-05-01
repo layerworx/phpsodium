@@ -5,7 +5,7 @@ use Layerworx\Phpsodium\SodiumLibrary;
 class LibraryTest extends PHPUnit_Framework_TestCase
 {
     /**
-     * @requires                 extension libsodium
+     * @requires                 extension sodium
      * @expectedException        Layerworx\Phpsodium\Exceptions\KeyTypeException
      * @expectedExceptionMessage keyedHash expects a string as the key
      */
@@ -15,7 +15,7 @@ class LibraryTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @requires                       extension libsodium
+     * @requires                       extension sodium
      * @expectedException              Layerworx\Phpsodium\Exceptions\HashLengthException
      * @expectedExceptionMessageRegExp #Hash length should be between \d+ and \d+#
      */
@@ -25,7 +25,7 @@ class LibraryTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @requires extension libsodium
+     * @requires extension sodium
      */
     public function testSodiumPubPrivMessageEncryption()
     {
@@ -36,7 +36,7 @@ class LibraryTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @requires extension libsodium
+     * @requires extension sodium
      */
     public function testSodiumMessageSigning()
     {
