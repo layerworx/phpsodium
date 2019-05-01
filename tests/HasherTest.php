@@ -5,7 +5,7 @@ use Layerworx\Phpsodium\SodiumLibrary;
 class HasherTest extends PHPUnit_Framework_TestCase
 {
     /**
-     * @requires extension libsodium
+     * @requires extension sodium
      */
     public function testBasicHashing()
     {
@@ -15,7 +15,7 @@ class HasherTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @requires extension libsodium
+     * @requires extension sodium
      */
     public function testSlowHashing()
     {

@@ -5,7 +5,7 @@ use Layerworx\Phpsodium\SodiumLibrary;
 class EncrypterTest extends PHPUnit_Framework_TestCase
 {
     /**
-     * @requires extension libsodium
+     * @requires extension sodium
      */
     public function testSodiumEncryption()
     {
@@ -15,7 +15,7 @@ class EncrypterTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @requires                 extension libsodium
+     * @requires                 extension sodium
      * @expectedException        Layerworx\Phpsodium\Exceptions\DecryptionException
      * @expectedExceptionMessage The key provided cannot decrypt the message
      */

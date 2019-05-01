@@ -17,9 +17,9 @@ class SodiumLibrary
      *
      * @return string
      */
-    public static function entropy($amount = Sodium\CRYPTO_SECRETBOX_NONCEBYTES)
+    public static function entropy($amount = SODIUM_CRYPTO_BOX_NONCEBYTES)
     {
-        return Sodium\randombytes_buf($amount);
+        return random_bytes($amount);
     }
 
     /**
@@ -31,7 +31,7 @@ class SodiumLibrary
      */
     public static function bin2hex($hexString)
     {
-        return Sodium\bin2hex($hexString);
+        return sodium_bin2hex($hexString);
     }
 
     /**
@@ -44,7 +44,7 @@ class SodiumLibrary
      */
     public static function hex2bin($binString, $ignore = '')
     {
-        return Sodium\hex2bin($binString, $ignore);
+        return sodium_hex2bin($binString, $ignore);
     }
 
     /**
@@ -56,7 +56,7 @@ class SodiumLibrary
      */
     public static function wipeMemory($variable)
     {
-        Sodium\memzero($variable);
+        sodium_memzero($variable);
     }
 
     /**
@@ -68,26 +68,26 @@ class SodiumLibrary
      *
      * @return string
      */
-    public static function rawHash($data, $key = null, $length = Sodium\CRYPTO_GENERICHASH_BYTES)
+    public static function rawHash($data, $key = null, $length = SODIUM_CRYPTO_GENERICHASH_BYTES)
     {
         # Test to make sure the length is within bounds
-        if (!($length >= Sodium\CRYPTO_GENERICHASH_BYTES_MIN && $length <= Sodium\CRYPTO_GENERICHASH_BYTES_MAX)) {
+        if (!($length >= SODIUM_CRYPTO_GENERICHASH_BYTES_MIN && $length <= SODIUM_CRYPTO_GENERICHASH_BYTES_MAX)) {
             throw new HashLengthException(sprintf('Hash length should be between %s and %s',
-                Sodium\CRYPTO_GENERICHASH_BYTES_MIN,
-                Sodium\CRYPTO_GENERICHASH_BYTES_MAX
+                SODIUM_CRYPTO_GENERICHASH_BYTES_MIN,
+                SODIUM_CRYPTO_GENERICHASH_BYTES_MAX
             ));
         }
 
         # Test if a key is set, if it is, generate a key if true, or use a key if set
         if ($key !== null) {
             if ($key === true) {
-                $key = Sodium\randombytes_buf(Sodium\CRYPTO_GENERICHASH_KEYBYTES_MAX);
+                $key = random_bytes(SODIUM_CRYPTO_GENERICHASH_KEYBYTES);
             } else {
                 $key = self::rawHash($key);
             }
         }
 
-        return Sodium\crypto_generichash($data, $key, $length);
+        return sodium_crypto_generichash($data, $key, $length);
     }
 
     /**
@@ -99,7 +99,7 @@ class SodiumLibrary
      */
     public static function hash($data)
     {
-        return self::rawHash($data, null, Sodium\CRYPTO_GENERICHASH_BYTES_MIN);
+        return self::rawHash($data, null, SODIUM_CRYPTO_GENERICHASH_BYTES_MIN);
     }
 
     /**
@@ -123,7 +123,7 @@ class SodiumLibrary
      */
     public static function veryUniqueHash($data)
     {
-        return self::rawHash($data, null, Sodium\CRYPTO_GENERICHASH_BYTES_MAX);
+        return self::rawHash($data, null, SODIUM_CRYPTO_GENERICHASH_BYTES_MAX);
     }
 
     /**
@@ -131,11 +131,11 @@ class SodiumLibrary
      *
      * @param string $data   The data to be hashed
      * @param string $key    The key to hash the data against
-     * @param int    $length The length of the hash to generate, defaults to Sodium\CRYPTO_GENERICHASH_BYTES
+     * @param int    $length The length of the hash to generate, defaults to SODIUM_CRYPTO_GENERICHASH_BYTES
      *
      * @return string
      */
-    public static function keyedHash($data, $key, $length = Sodium\CRYPTO_GENERICHASH_BYTES)
+    public static function keyedHash($data, $key, $length = SODIUM_CRYPTO_GENERICHASH_BYTES)
     {
         # Test to make sure the key is a string
         if (!is_string($key)) {
@@ -157,16 +157,16 @@ class SodiumLibrary
     {
         # Create the password hash
         if ($extraSecure) {
-            $passwordHash = Sodium\crypto_pwhash_scryptsalsa208sha256_str(
+            $passwordHash = sodium_crypto_pwhash_scryptsalsa208sha256_str(
                 $plaintext,
-                Sodium\CRYPTO_PWHASH_SCRYPTSALSA208SHA256_OPSLIMIT_SENSITIVE,
-                Sodium\CRYPTO_PWHASH_SCRYPTSALSA208SHA256_MEMLIMIT_SENSITIVE
+                SODIUM_CRYPTO_PWHASH_SCRYPTSALSA208SHA256_OPSLIMIT_SENSITIVE,
+                SODIUM_CRYPTO_PWHASH_SCRYPTSALSA208SHA256_MEMLIMIT_SENSITIVE
             );
         } else {
-            $passwordHash = Sodium\crypto_pwhash_scryptsalsa208sha256_str(
+            $passwordHash = sodium_crypto_pwhash_scryptsalsa208sha256_str(
                 $plaintext,
-                Sodium\CRYPTO_PWHASH_SCRYPTSALSA208SHA256_OPSLIMIT_INTERACTIVE,
-                Sodium\CRYPTO_PWHASH_SCRYPTSALSA208SHA256_MEMLIMIT_INTERACTIVE
+                SODIUM_CRYPTO_PWHASH_SCRYPTSALSA208SHA256_OPSLIMIT_INTERACTIVE,
+                SODIUM_CRYPTO_PWHASH_SCRYPTSALSA208SHA256_MEMLIMIT_INTERACTIVE
             );
         }
 
@@ -183,7 +183,7 @@ class SodiumLibrary
      */
     public static function checkPassword($password, $hash)
     {
-        if (Sodium\crypto_pwhash_scryptsalsa208sha256_str_verify($hash, $password)) {
+        if (sodium_crypto_pwhash_scryptsalsa208sha256_str_verify($hash, $password)) {
             self::wipeMemory($password);
 
             return true;
@@ -207,7 +207,7 @@ class SodiumLibrary
         $nonce = self::entropy();
 
         # Encrypt the message
-        $messageEncrypted = Sodium\crypto_secretbox($message, $nonce, self::rawHash($key, null, Sodium\CRYPTO_SECRETBOX_KEYBYTES));
+        $messageEncrypted = sodium_crypto_secretbox($message, $nonce, self::rawHash($key, null, SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
 
         return sprintf('%s.%s', self::bin2hex($nonce), self::bin2hex($messageEncrypted));
     }
@@ -224,10 +224,10 @@ class SodiumLibrary
     {
         $payload = explode('.', $message);
 
-        $decryption = Sodium\crypto_secretbox_open(
-            Sodium\hex2bin($payload[1]),
-            Sodium\hex2bin($payload[0]),
-            self::rawHash($key, null, Sodium\CRYPTO_SECRETBOX_KEYBYTES)
+        $decryption = sodium_crypto_secretbox_open(
+            sodium_hex2bin($payload[1]),
+            sodium_hex2bin($payload[0]),
+            self::rawHash($key, null, SODIUM_CRYPTO_SECRETBOX_KEYBYTES)
         );
 
         if (!$decryption) {
@@ -244,11 +244,11 @@ class SodiumLibrary
      */
     public static function genBoxKeypair()
     {
-        $keypair = Sodium\crypto_box_keypair();
+        $keypair = sodium_crypto_box_keypair();
 
         return [
-            'pub' => Sodium\crypto_box_publickey($keypair),
-            'pri' => Sodium\crypto_box_secretkey($keypair),
+            'pub' => sodium_crypto_box_publickey($keypair),
+            'pri' => sodium_crypto_box_secretkey($keypair),
         ];
     }
 
@@ -259,11 +259,11 @@ class SodiumLibrary
      */
     public static function genSignKeypair()
     {
-        $keypair = Sodium\crypto_sign_keypair();
+        $keypair = sodium_crypto_sign_keypair();
 
         return [
-            'pub' => Sodium\crypto_sign_publickey($keypair),
-            'pri' => Sodium\crypto_sign_secretkey($keypair),
+            'pub' => sodium_crypto_sign_publickey($keypair),
+            'pri' => sodium_crypto_sign_secretkey($keypair),
         ];
     }
 
@@ -279,15 +279,15 @@ class SodiumLibrary
     public static function messageSendEncrypt($receiving_pub, $sending_priv, $message)
     {
         # Create a keypair to send an encrypted message
-        $messageKey = Sodium\crypto_box_keypair_from_secretkey_and_publickey(
+        $messageKey = sodium_crypto_box_keypair_from_secretkey_and_publickey(
             $sending_priv,
             $receiving_pub
         );
 
         # Create entropy for the message
-        $nonce = self::entropy(Sodium\CRYPTO_BOX_NONCEBYTES);
+        $nonce = self::entropy(SODIUM_CRYPTO_BOX_NONCEBYTES);
 
-        $message = Sodium\crypto_box(
+        $message = sodium_crypto_box(
             $message,
             $nonce,
             $messageKey
@@ -308,7 +308,7 @@ class SodiumLibrary
     public static function messageReceiveEncrypt($receiving_priv, $sending_pub, $payload)
     {
         # Create a keypair to receive an encrypted message
-        $messageKey = Sodium\crypto_box_keypair_from_secretkey_and_publickey(
+        $messageKey = sodium_crypto_box_keypair_from_secretkey_and_publickey(
             $receiving_priv,
             $sending_pub
         );
@@ -317,7 +317,7 @@ class SodiumLibrary
         $ciphertext = explode('.', $payload);
 
         # Decrypt the message
-        $plaintext = Sodium\crypto_box_open(
+        $plaintext = sodium_crypto_box_open(
             self::hex2bin($ciphertext[1]),
             self::hex2bin($ciphertext[0]),
             $messageKey
@@ -341,7 +341,7 @@ class SodiumLibrary
      */
     public static function signMessage($sign_key, $message)
     {
-        return self::bin2hex(Sodium\crypto_sign(
+        return self::bin2hex(sodium_crypto_sign(
             $message,
             $sign_key
         ));
@@ -357,7 +357,7 @@ class SodiumLibrary
      */
     public static function verifySignature($pub_key, $message)
     {
-        $original_msg = Sodium\crypto_sign_open(
+        $original_msg = sodium_crypto_sign_open(
             self::hex2bin($message),
             $pub_key
         );
